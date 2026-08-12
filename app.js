@@ -380,9 +380,10 @@ async function apiAddSticker(boardId, index, memo) {
         }
 
         // 2. Supabase Realtime Broadcast (기기 간 50ms 초고속 실시간 푸시 알림 전송)
-        if (supabaseClient && realtimeChannel) {
+        if (supabaseClient) {
             try {
-                realtimeChannel.send({
+                const bChannel = realtimeChannel || supabaseClient.channel(`praise_stickers_realtime_${boardId}`);
+                bChannel.send({
                     type: 'broadcast',
                     event: 'sticker_added',
                     payload: {
@@ -1560,9 +1561,47 @@ function setupRealtimeSubscription(boardId) {
                 }
             )
             .subscribe();
+
+        // 스마트 폴링 3중 동기화 실행 (모바일 LTE/5G 소켓 슬립 완벽 방어)
+        setupSmartPollingSync(boardId);
     } catch (e) {
         console.warn("Realtime 구독 설정 에러:", e);
     }
+}
+
+let pollingSyncInterval = null;
+let lastKnownStickerCount = -1;
+
+// 기기 간 스티커 수 변경 실시간 폴링 방어 감지기 (모바일 슬립/소켓 끊김 완벽 복구)
+function setupSmartPollingSync(boardId) {
+    if (pollingSyncInterval) {
+        clearInterval(pollingSyncInterval);
+        pollingSyncInterval = null;
+    }
+    if (!boardId) return;
+
+    pollingSyncInterval = setInterval(async () => {
+        try {
+            if (!currentBoardId || currentBoardId !== boardId) return;
+            const stickers = await apiGetStickers(boardId);
+            if (stickers && Array.isArray(stickers)) {
+                if (lastKnownStickerCount >= 0 && stickers.length > lastKnownStickerCount) {
+                    const sorted = stickers.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+                    const latest = sorted[0];
+                    if (latest && latest.sticker_index !== undefined) {
+                        const key = `${boardId}_${latest.sticker_index}_POLL`;
+                        if (lastProcessedStickerKey !== key) {
+                            lastProcessedStickerKey = key;
+                            handleStickerAddedNotification(latest.sticker_index, latest.memo, false);
+                        }
+                    }
+                }
+                lastKnownStickerCount = stickers.length;
+            }
+        } catch (e) {
+            console.warn("스마트 폴링 동기화 에러:", e);
+        }
+    }, 4000);
 }
 
 // 현재 화면 리프레시

@@ -35,5 +35,7 @@ CREATE TABLE IF NOT EXISTS public.praise_stickers (
 -- ALTER TABLE public.praise_stickers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW());
 -- 2단계: 기존 데이터의 수정 일시를 최초 작성 일시로 일치시키기
 -- UPDATE public.praise_stickers SET updated_at = created_at WHERE updated_at IS NULL;
--- 3단계: NOT NULL 제약 조건 설정
--- ALTER TABLE public.praise_stickers ALTER COLUMN updated_at SET NOT NULL;
+-- 3. 기기 간 실시간 푸시 알림 수신을 위한 Supabase Realtime 게시(Publication) 설정
+ALTER PUBLICATION supabase_realtime ADD TABLE public.praise_boards;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.praise_stickers;
+

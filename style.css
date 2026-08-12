@@ -1608,14 +1608,21 @@ input:disabled {
    개인 알림 설정 iOS 힐링 스위치 토글 CSS
    ========================================== */
 .settings-tab-btn {
+    flex: 1;
+    padding: 10px;
     border: none;
     outline: none;
     cursor: pointer;
+    background-color: #F3F4F6 !important;
+    color: var(--text-primary, #1F2937) !important;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 13px;
     transition: all 0.25s ease;
 }
 
 .settings-tab-btn.active {
-    background: var(--stitch-primary, #EC4899) !important;
+    background-color: var(--stitch-primary, #EC4899) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
 }

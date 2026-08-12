@@ -1491,125 +1491,132 @@ function highlightNewStickerSlot(stickerIndex) {
     }
 }
 
-// 실시간 스티커 부착 처리 통합 핸들러
-function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = false) {
-    // 1. 화면 리프레시로 스티커 갱신
-    refreshApp().then(() => {
-        // 2. 알림 챠임 음향 재생
+// 실시간 스티커 부착 처리 통합 핸들러 (다른 스티커판을 열어둔 상태에서도 푸시 알림 100% 수신)
+function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = false, targetBoardId = null) {
+    const isCurrentBoard = !targetBoardId || targetBoardId === currentBoardId;
+
+    if (isCurrentBoard) {
+        // 1. 현재 열려 있는 스티커판이면 UI 리프레시 + 알림 + 스티커 슬롯 하이라이트
+        refreshApp().then(() => {
+            playNotificationSound();
+            showRealtimeStickerToast(stickerIndex, memo);
+            triggerMobilePushNotification("새로운 스티커가 붙었습니다.", "새로운 스티커가 붙었습니다.");
+            highlightNewStickerSlot(stickerIndex);
+        });
+    } else {
+        // 2. 다른 스티커판에 스티커가 붙은 경우에도 알림 소리 + 모바일 진동 + 모바일 푸시 알림 즉시 발송
         playNotificationSound();
-
-        // 3. 화면 토스트 알림 노출
         showRealtimeStickerToast(stickerIndex, memo);
-
-        // 4. 모바일 백그라운드 푸시 알림 (진동 + 모바일 상단 알림 바)
-        const notifTitle = "새로운 스티커가 붙었습니다.";
-        const notifBody = "새로운 스티커가 붙었습니다.";
-        triggerMobilePushNotification(notifTitle, notifBody);
-
-        // 5. 스티커 칸 Glow 하이라이트
-        highlightNewStickerSlot(stickerIndex);
-    });
+        triggerMobilePushNotification("새로운 스티커가 붙었습니다.", "새로운 스티커가 붙었습니다.");
+    }
 }
 
-let realtimeChannel = null;
+let realtimeChannelsMap = new Map();
 let lastProcessedStickerKey = null;
 
+// 보유한 모든 스티커판 다중 실시간 연동 (다른 스티커판 교차 알림 수신)
 function setupRealtimeSubscription(boardId) {
     if (!boardId) return;
 
-    // 새로 생성되거나 연결된 보드 접속 시 알림 추적 상태 초기화
-    lastKnownStickerCount = -1;
-    lastProcessedStickerKey = null;
+    // 사용자 등록 보드 목록 전체 수집
+    const registered = getRegisteredBoards() || [];
+    const targetBoardIds = new Set(registered.map(b => b.id));
+    targetBoardIds.add(boardId);
 
     if (!supabaseClient || isLocalMode) {
-        setupSmartPollingSync(boardId);
+        setupSmartPollingSync(targetBoardIds);
         return;
     }
 
-    if (realtimeChannel) {
-        supabaseClient.removeChannel(realtimeChannel);
-        realtimeChannel = null;
-    }
     try {
-        realtimeChannel = supabaseClient
-            .channel(`praise_stickers_realtime_${boardId}`)
-            .on(
-                'broadcast',
-                { event: 'sticker_added' },
-                (eventPayload) => {
-                    const data = eventPayload.payload;
-                    if (data && data.boardId === currentBoardId) {
-                        const key = `${data.boardId}_${data.stickerIndex}_${data.timestamp}`;
-                        if (lastProcessedStickerKey !== key) {
-                            lastProcessedStickerKey = key;
-                            handleStickerAddedNotification(data.stickerIndex, data.memo, false);
-                        }
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'praise_stickers', filter: `board_id=eq.${boardId}` },
-                (payload) => {
-                    const newRecord = payload.new;
-                    if (newRecord && newRecord.sticker_index === 999) {
-                        const match = (newRecord.memo || "").match(/\[theme:(#[0-9A-Fa-f]{6})\]/);
-                        if (match) {
-                            applyThemeColor(match[1], false);
-                        }
-                    } else {
-                        if (payload.eventType === 'INSERT' && newRecord && newRecord.sticker_index !== undefined) {
-                            const key = `${newRecord.board_id}_${newRecord.sticker_index}_DB`;
+        targetBoardIds.forEach(bId => {
+            if (realtimeChannelsMap.has(bId)) return;
+
+            const channel = supabaseClient
+                .channel(`praise_stickers_realtime_${bId}`)
+                .on(
+                    'broadcast',
+                    { event: 'sticker_added' },
+                    (eventPayload) => {
+                        const data = eventPayload.payload;
+                        if (data && data.boardId) {
+                            const key = `${data.boardId}_${data.stickerIndex}_${data.timestamp}`;
                             if (lastProcessedStickerKey !== key) {
                                 lastProcessedStickerKey = key;
-                                handleStickerAddedNotification(newRecord.sticker_index, newRecord.memo, false);
+                                handleStickerAddedNotification(data.stickerIndex, data.memo, false, data.boardId);
                             }
-                        } else {
-                            refreshApp();
                         }
                     }
-                }
-            )
-            .subscribe();
+                )
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'praise_stickers', filter: `board_id=eq.${bId}` },
+                    (payload) => {
+                        const newRecord = payload.new;
+                        if (newRecord && newRecord.sticker_index === 999) {
+                            const match = (newRecord.memo || "").match(/\[theme:(#[0-9A-Fa-f]{6})\]/);
+                            if (match && bId === currentBoardId) {
+                                applyThemeColor(match[1], false);
+                            }
+                        } else {
+                            if (payload.eventType === 'INSERT' && newRecord && newRecord.sticker_index !== undefined) {
+                                const key = `${newRecord.board_id}_${newRecord.sticker_index}_DB`;
+                                if (lastProcessedStickerKey !== key) {
+                                    lastProcessedStickerKey = key;
+                                    handleStickerAddedNotification(newRecord.sticker_index, newRecord.memo, false, newRecord.board_id);
+                                }
+                            } else if (bId === currentBoardId) {
+                                refreshApp();
+                            }
+                        }
+                    }
+                )
+                .subscribe();
 
-        // 새로 생성된 스티커판도 3중 실시간/스마트 폴링 알림 동기화 자동 연결
-        setupSmartPollingSync(boardId);
+            realtimeChannelsMap.set(bId, channel);
+        });
+
+        // 3중 다중 스티커판 스마트 폴링 동기화 연결
+        setupSmartPollingSync(targetBoardIds);
     } catch (e) {
         console.warn("Realtime 구독 설정 에러:", e);
     }
 }
 
 let pollingSyncInterval = null;
-let lastKnownStickerCount = -1;
+let boardStickerCountsMap = new Map();
 
-// 기기 간 스티커 수 변경 실시간 폴링 방어 감지기 (모바일 슬립/소켓 끊김 완벽 복구)
-function setupSmartPollingSync(boardId) {
+// 보유한 모든 스티커판 대상 4초 간격 교차 알림 폴링 동기화기
+function setupSmartPollingSync(targetBoardIds) {
     if (pollingSyncInterval) {
         clearInterval(pollingSyncInterval);
         pollingSyncInterval = null;
     }
-    if (!boardId) return;
+    const idsArray = Array.from(targetBoardIds || []);
+    if (idsArray.length === 0) return;
 
     pollingSyncInterval = setInterval(async () => {
         try {
-            if (!currentBoardId || currentBoardId !== boardId) return;
-            const stickers = await apiGetStickers(boardId);
-            if (stickers && Array.isArray(stickers)) {
-                if (lastKnownStickerCount >= 0 && stickers.length > lastKnownStickerCount) {
-                    const sorted = stickers.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-                    const latest = sorted[0];
-                    if (latest && latest.sticker_index !== undefined) {
-                        const key = `${boardId}_${latest.sticker_index}_POLL`;
-                        if (lastProcessedStickerKey !== key) {
-                            lastProcessedStickerKey = key;
-                            handleStickerAddedNotification(latest.sticker_index, latest.memo, false);
+            for (const bId of idsArray) {
+                const stickers = await apiGetStickers(bId);
+                if (stickers && Array.isArray(stickers)) {
+                    const lastCount = boardStickerCountsMap.get(bId);
+                    if (lastCount !== undefined && lastCount >= 0 && stickers.length > lastCount) {
+                        const sorted = stickers.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+                        const latest = sorted[0];
+                        if (latest && latest.sticker_index !== undefined) {
+                            const key = `${bId}_${latest.sticker_index}_POLL`;
+                            if (lastProcessedStickerKey !== key) {
+                                lastProcessedStickerKey = key;
+                                handleStickerAddedNotification(latest.sticker_index, latest.memo, false, bId);
+                            }
                         }
                     }
+                    boardStickerCountsMap.set(bId, stickers.length);
                 }
-                lastKnownStickerCount = stickers.length;
             }
         } catch (e) {
-            console.warn("스마트 폴링 동기화 에러:", e);
+            console.warn("다중 보드 스마트 폴링 동기화 에러:", e);
         }
     }, 4000);
 }

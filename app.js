@@ -97,6 +97,9 @@ const btnSettingsSave = document.getElementById("btn-settings-save");
 
 // RGB 색상 팔레트 및 알림 모달 요소
 const btnToggleNotifSound = document.getElementById("btn-toggle-notif-sound");
+const modalNotifHelp = document.getElementById("modal-notif-help");
+const btnNotifHelpClose = document.getElementById("btn-notif-help-close");
+const btnNotifHelpRetry = document.getElementById("btn-notif-help-retry");
 const btnColorPalette = document.getElementById("btn-color-palette");
 const modalColorPalette = document.getElementById("modal-color-palette");
 const btnColorApply = document.getElementById("btn-color-apply");
@@ -1347,25 +1350,51 @@ function triggerMobilePushNotification(title, body) {
     }
 }
 
-// 브라우저 데스크톱 알림 권한 요청 및 발송
+// 모바일/브라우저 알림 권한 처리 및 해제 안내 모달 연동
 function requestNotificationPermission() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
     if ("Notification" in window) {
-        if (Notification.permission === "default") {
+        const currentPerm = Notification.permission;
+
+        if (currentPerm === "granted") {
+            showToast("📱 이미 모바일 푸시 알림이 활성화되어 있습니다.");
+            triggerMobilePushNotification("🎉 모바일 알림 정상 동작 중!", "스티커가 붙으면 모바일 상단 알림이 표시됩니다.");
+            return;
+        }
+
+        if (currentPerm === "denied") {
+            showToast("⚠️ 알림 권한이 차단되어 있습니다. 안내창을 확인해 주세요.");
+            if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
+            return;
+        }
+
+        // permission === "default"
+        try {
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
                     showToast("📱 모바일 푸시 알림이 활성화되었습니다!");
                     triggerMobilePushNotification("🎉 모바일 알림 활성화!", "스티커가 등록되면 모바일로 알림이 전송됩니다.");
                 } else if (permission === "denied") {
-                    showToast("⚠️ 알림 권한이 거부되었습니다. 모바일 설정에서 허용해 주세요.");
+                    showToast("⚠️ 알림 권한이 거부되었습니다.");
+                    if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
                 }
+            }).catch(err => {
+                console.warn("알림 권한 요청 에러:", err);
+                if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
             });
-        } else if (Notification.permission === "granted") {
-            showToast("📱 이미 모바일 푸시 알림이 활성화되어 있습니다.");
-        } else {
-            showToast("⚠️ 브라우저 알림 설정에서 권한을 허용해 주세요.");
+        } catch (e) {
+            console.warn("알림 권한 요청 동기 에러:", e);
+            if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
         }
     } else {
-        showToast("ℹ️ 현재 브라우저는 웹 알림을 지원하지 않습니다.");
+        if (isIOS && !isStandalone) {
+            showToast("🍎 iPhone에서는 홈 화면에 추가 후 실행해야 알림이 발송됩니다.");
+            if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
+        } else {
+            showToast("ℹ️ 현재 브라우저는 웹 시스템 알림을 지원하지 않지만 인앱 알림/소리/진동은 정상 작동합니다.");
+        }
     }
 }
 
@@ -2261,6 +2290,19 @@ function applyThemeColor(hex, save = false) {
 if (btnToggleNotifSound) {
     btnToggleNotifSound.addEventListener("click", () => {
         playNotificationSound();
+        requestNotificationPermission();
+    });
+}
+
+if (btnNotifHelpClose) {
+    btnNotifHelpClose.addEventListener("click", () => {
+        if (modalNotifHelp) modalNotifHelp.classList.add("hidden");
+    });
+}
+
+if (btnNotifHelpRetry) {
+    btnNotifHelpRetry.addEventListener("click", () => {
+        if (modalNotifHelp) modalNotifHelp.classList.add("hidden");
         requestNotificationPermission();
     });
 }

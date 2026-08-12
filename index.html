@@ -440,6 +440,37 @@
     <!-- 커스텀 토스트 알림 -->
     <div id="toast" class="toast hidden"></div>
 
+    <!-- 모바일 푸시 알림 차단 해제 안내 모달 -->
+    <div id="modal-notif-help" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 380px;">
+            <div class="modal-header">
+                <span class="material-icons" style="color: #EC4899; font-size: 28px;">notifications_active</span>
+                <h3 style="margin-left: 8px; font-size: 18px;">📱 모바일 푸시 알림 설정 안내</h3>
+            </div>
+            <div class="modal-body" style="font-size: 13px; line-height: 1.6; color: var(--text-primary); margin-top: 12px;">
+                <div style="background: #FFF5F8; border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid #FBCFE8;">
+                    <div style="font-weight: bold; color: #EC4899; margin-bottom: 4px;">🍎 아이폰 (iOS Safari) 사용자</div>
+                    <p style="margin: 0; font-size: 12px; color: #4B5563;">
+                        iPhone에서는 Safari 하단 <b>공유 버튼(📤) ➔ '홈 화면에 추가'</b>를 눌러 앱으로 설치(PWA)한 후 실행해야 푸시 알림이 발송됩니다!
+                    </p>
+                </div>
+                <div style="background: #EFF6FF; border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid #BFDBFE;">
+                    <div style="font-weight: bold; color: #2563EB; margin-bottom: 4px;">🤖 안드로이드 (Android Chrome) 사용자</div>
+                    <p style="margin: 0; font-size: 12px; color: #4B5563;">
+                        주소창 좌측 <b>🔒(자물쇠) 또는 ⚙️(설정) ➔ '권한' ➔ '알림'</b>을 <b>'허용'</b>으로 변경해 주세요.
+                    </p>
+                </div>
+                <p style="font-size: 11px; color: #6B7280; text-align: center; margin: 4px 0;">
+                    💡 웹 푸시 알림은 <b>HTTPS 보안 주소</b>(GitHub Pages 등)에서 동작합니다.
+                </p>
+            </div>
+            <div class="modal-actions" style="margin-top: 14px; display: flex; justify-content: flex-end; gap: 8px;">
+                <button id="btn-notif-help-close" class="btn btn-secondary">닫기</button>
+                <button id="btn-notif-help-retry" class="btn btn-primary">다시 동의 시도 🔔</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 실시간 스티커 알림 팝업 카운터 -->
     <div id="realtime-notification" class="realtime-notification-toast"></div>
 

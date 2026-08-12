@@ -363,17 +363,38 @@ async function apiAddSticker(boardId, index, memo) {
         }
     }
 
-    if (result && typeof stickerBroadcastChannel !== 'undefined' && stickerBroadcastChannel) {
-        try {
-            stickerBroadcastChannel.postMessage({
-                boardId: boardId,
-                stickerIndex: index,
-                memo: memo,
-                senderIsEditor: true,
-                timestamp: Date.now()
-            });
-        } catch (e) {
-            console.warn("BroadcastChannel 메시지 전송 실패:", e);
+    if (result) {
+        // 1. Local BroadcastChannel (동일 기기 타 탭 실시간 알림)
+        if (typeof stickerBroadcastChannel !== 'undefined' && stickerBroadcastChannel) {
+            try {
+                stickerBroadcastChannel.postMessage({
+                    boardId: boardId,
+                    stickerIndex: index,
+                    memo: memo,
+                    senderIsEditor: true,
+                    timestamp: Date.now()
+                });
+            } catch (e) {
+                console.warn("BroadcastChannel 메시지 전송 실패:", e);
+            }
+        }
+
+        // 2. Supabase Realtime Broadcast (기기 간 50ms 초고속 실시간 푸시 알림 전송)
+        if (supabaseClient && realtimeChannel) {
+            try {
+                realtimeChannel.send({
+                    type: 'broadcast',
+                    event: 'sticker_added',
+                    payload: {
+                        boardId: boardId,
+                        stickerIndex: index,
+                        memo: memo,
+                        timestamp: Date.now()
+                    }
+                });
+            } catch (e) {
+                console.warn("Supabase Realtime Broadcast 전송 에러:", e);
+            }
         }
     }
 
@@ -1490,6 +1511,8 @@ function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = fal
 }
 
 let realtimeChannel = null;
+let lastProcessedStickerKey = null;
+
 function setupRealtimeSubscription(boardId) {
     if (!supabaseClient || !boardId || isLocalMode) return;
     if (realtimeChannel) {
@@ -1498,7 +1521,21 @@ function setupRealtimeSubscription(boardId) {
     }
     try {
         realtimeChannel = supabaseClient
-            .channel(`public:praise_stickers:${boardId}`)
+            .channel(`praise_stickers_realtime_${boardId}`)
+            .on(
+                'broadcast',
+                { event: 'sticker_added' },
+                (eventPayload) => {
+                    const data = eventPayload.payload;
+                    if (data && data.boardId === currentBoardId) {
+                        const key = `${data.boardId}_${data.stickerIndex}_${data.timestamp}`;
+                        if (lastProcessedStickerKey !== key) {
+                            lastProcessedStickerKey = key;
+                            handleStickerAddedNotification(data.stickerIndex, data.memo, false);
+                        }
+                    }
+                }
+            )
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'praise_stickers', filter: `board_id=eq.${boardId}` },
@@ -1511,7 +1548,11 @@ function setupRealtimeSubscription(boardId) {
                         }
                     } else {
                         if (payload.eventType === 'INSERT' && newRecord && newRecord.sticker_index !== undefined) {
-                            handleStickerAddedNotification(newRecord.sticker_index, newRecord.memo, false);
+                            const key = `${newRecord.board_id}_${newRecord.sticker_index}_DB`;
+                            if (lastProcessedStickerKey !== key) {
+                                lastProcessedStickerKey = key;
+                                handleStickerAddedNotification(newRecord.sticker_index, newRecord.memo, false);
+                            }
                         } else {
                             refreshApp();
                         }

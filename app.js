@@ -1354,6 +1354,19 @@ function triggerMobilePushNotification(title, body) {
 function requestNotificationPermission() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isHttpInsecure = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+    // HTTP 비보안 연결 경고 박스 노출 여부 제어
+    const httpBox = document.getElementById("http-warning-box");
+    if (httpBox) {
+        httpBox.style.display = isHttpInsecure ? "block" : "none";
+    }
+
+    if (isHttpInsecure) {
+        showToast("⚠️ HTTP 일반 주소에서는 알림이 자동 차단됩니다. HTTPS 주소를 이용해 주세요.");
+        if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
+        return;
+    }
 
     if ("Notification" in window) {
         const currentPerm = Notification.permission;
@@ -1377,7 +1390,7 @@ function requestNotificationPermission() {
                     showToast("📱 모바일 푸시 알림이 활성화되었습니다!");
                     triggerMobilePushNotification("🎉 모바일 알림 활성화!", "스티커가 등록되면 모바일로 알림이 전송됩니다.");
                 } else if (permission === "denied") {
-                    showToast("⚠️ 알림 권한이 거부되었습니다.");
+                    showToast("⚠️ 알림 권한이 거부되었습니다. 해제법을 확인해 주세요.");
                     if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
                 }
             }).catch(err => {

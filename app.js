@@ -2693,6 +2693,10 @@ function startAutoSync() {
         tabBtnGeneral.addEventListener("click", () => {
             tabBtnGeneral.classList.add("active");
             tabBtnNotif.classList.remove("active");
+            tabBtnGeneral.style.background = "var(--stitch-primary, #EC4899)";
+            tabBtnGeneral.style.color = "white";
+            tabBtnNotif.style.background = "#F3F4F6";
+            tabBtnNotif.style.color = "var(--text-primary, #1F2937)";
             if (tabContentGeneral) tabContentGeneral.classList.remove("hidden");
             if (tabContentNotif) tabContentNotif.classList.add("hidden");
         });
@@ -2700,6 +2704,10 @@ function startAutoSync() {
         tabBtnNotif.addEventListener("click", () => {
             tabBtnNotif.classList.add("active");
             tabBtnGeneral.classList.remove("active");
+            tabBtnNotif.style.background = "var(--stitch-primary, #EC4899)";
+            tabBtnNotif.style.color = "white";
+            tabBtnGeneral.style.background = "#F3F4F6";
+            tabBtnGeneral.style.color = "var(--text-primary, #1F2937)";
             if (tabContentNotif) tabContentNotif.classList.remove("hidden");
             if (tabContentGeneral) tabContentGeneral.classList.add("hidden");
         });

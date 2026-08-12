@@ -1608,36 +1608,46 @@ input:disabled {
    개인 알림 설정 iOS 힐링 스위치 토글 CSS
    ========================================== */
 .settings-tab-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    outline: none;
-    cursor: pointer;
+    flex: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px 16px !important;
+    border: 0 !important;
+    border-style: none !important;
+    outline: none !important;
+    cursor: pointer !important;
     background-color: #F3F4F6 !important;
     color: var(--text-primary, #1F2937) !important;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 13px;
-    transition: all 0.25s ease;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
 }
 
 .settings-tab-btn.active {
     background-color: var(--stitch-primary, #EC4899) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25) !important;
 }
 
 .toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 52px;
-    height: 30px;
-    flex-shrink: 0;
-    cursor: pointer;
-    vertical-align: middle;
+    position: relative !important;
+    display: inline-block !important;
+    width: 52px !important;
+    height: 30px !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
+    vertical-align: middle !important;
 }
 
+.toggle-switch input,
 .toggle-switch input[type="checkbox"] {
+    display: none !important;
     appearance: none !important;
     -webkit-appearance: none !important;
     opacity: 0 !important;
@@ -1650,29 +1660,29 @@ input:disabled {
 }
 
 .toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #E5E7EB;
-    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 30px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: absolute !important;
+    cursor: pointer !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: #E5E7EB !important;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 30px !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 24px;
-    width: 24px;
-    left: 3px;
-    bottom: 3px;
-    background-color: #ffffff;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    position: absolute !important;
+    content: "" !important;
+    height: 24px !important;
+    width: 24px !important;
+    left: 3px !important;
+    bottom: 3px !important;
+    background-color: #ffffff !important;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) !important;
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -1680,7 +1690,7 @@ input:disabled {
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
-    transform: translateX(22px);
+    transform: translateX(22px) !important;
 }
 
 

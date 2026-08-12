@@ -1515,7 +1515,17 @@ let realtimeChannel = null;
 let lastProcessedStickerKey = null;
 
 function setupRealtimeSubscription(boardId) {
-    if (!supabaseClient || !boardId || isLocalMode) return;
+    if (!boardId) return;
+
+    // 새로 생성되거나 연결된 보드 접속 시 알림 추적 상태 초기화
+    lastKnownStickerCount = -1;
+    lastProcessedStickerKey = null;
+
+    if (!supabaseClient || isLocalMode) {
+        setupSmartPollingSync(boardId);
+        return;
+    }
+
     if (realtimeChannel) {
         supabaseClient.removeChannel(realtimeChannel);
         realtimeChannel = null;
@@ -1562,7 +1572,7 @@ function setupRealtimeSubscription(boardId) {
             )
             .subscribe();
 
-        // 스마트 폴링 3중 동기화 실행 (모바일 LTE/5G 소켓 슬립 완벽 방어)
+        // 새로 생성된 스티커판도 3중 실시간/스마트 폴링 알림 동기화 자동 연결
         setupSmartPollingSync(boardId);
     } catch (e) {
         console.warn("Realtime 구독 설정 에러:", e);

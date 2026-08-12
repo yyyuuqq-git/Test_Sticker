@@ -1,8 +1,8 @@
 // ==========================================
-// 서비스 워커 (Service Worker) - 모바일 푸시 알림
+// 서비스 워커 (Service Worker) - 모바일 백그라운드 푸시 알림
 // ==========================================
 
-const CACHE_NAME = 'praise-sticker-v1';
+const CACHE_NAME = 'praise-sticker-v2';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
@@ -12,19 +12,22 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
 });
 
-// 백그라운드 푸시 수신 이벤트 핸들러
+// 백그라운드 푸시 수신 이벤트 핸들러 (화면 꺼짐 / 브라우저 닫힘 상태 완벽 지원)
 self.addEventListener('push', (event) => {
-    let data = { title: '🎉 새로운 칭찬 스티커 도착!', body: '편집님이 칭찬 스티커를 부착했습니다.' };
+    let title = '새로운 스티커가 붙었습니다.';
+    let body = '새로운 스티커가 붙었습니다.';
     if (event.data) {
         try {
-            data = event.data.json();
+            const data = event.data.json();
+            title = data.title || '새로운 스티커가 붙었습니다.';
+            body = data.body || '새로운 스티커가 붙었습니다.';
         } catch (e) {
-            data.body = event.data.text();
+            body = event.data.text() || '새로운 스티커가 붙었습니다.';
         }
     }
 
     const options = {
-        body: data.body || '편집님이 칭찬 스티커를 부착했습니다!',
+        body: body,
         icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
         badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
         vibrate: [200, 100, 200, 100, 200],
@@ -36,11 +39,33 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title || '🎉 새로운 칭찬 스티커 도착!', options)
+        self.registration.showNotification(title, options)
     );
 });
 
-// 모바일 상단 알림 터치/클릭 시 브라우저 또는 모바일 앱으로 전환
+// 클라이언트 메시지 수신 (페이지 닫힘/백그라운드 지원)
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SHOW_STICKER_NOTIFICATION') {
+        const title = '새로운 스티커가 붙었습니다.';
+        const body = event.data.memo ? `"${event.data.memo}"` : '새로운 스티커가 붙었습니다.';
+        const options = {
+            body: body,
+            icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+            badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+            vibrate: [200, 100, 200, 100, 200],
+            tag: 'praise-sticker-notification',
+            renotify: true,
+            data: {
+                url: self.registration.scope
+            }
+        };
+        event.waitUntil(
+            self.registration.showNotification(title, options)
+        );
+    }
+});
+
+// 모바일 상단 알림 터치 시 스티커판 앱으로 전환 및 열기
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(
@@ -52,7 +77,7 @@ self.addEventListener('notificationclick', (event) => {
                 }
             }
             if (self.clients.openWindow) {
-                return self.clients.openWindow('/');
+                return self.clients.openWindow('./index.html');
             }
         })
     );

@@ -1344,6 +1344,9 @@ if ('serviceWorker' in navigator) {
 
 // 모바일 푸시 알림 트리거 (진동 + 시스템 상단 알림 바 + 데스크톱 알림)
 function triggerMobilePushNotification(title, body) {
+    const finalTitle = "새로운 스티커가 붙었습니다.";
+    const finalBody = body || "새로운 스티커가 붙었습니다.";
+
     // 1. 모바일 진동 효과 (Android/크롬 지원)
     if ('vibrate' in navigator) {
         try {
@@ -1356,8 +1359,8 @@ function triggerMobilePushNotification(title, body) {
     // 2. 서비스 워커 푸시 알림 시도 (모바일 백그라운드 상단 알림 바)
     if ('serviceWorker' in navigator && Notification.permission === "granted") {
         navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, {
-                body: body,
+            registration.showNotification(finalTitle, {
+                body: finalBody,
                 icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
                 badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
                 vibrate: [200, 100, 200, 100, 200],
@@ -1365,10 +1368,10 @@ function triggerMobilePushNotification(title, body) {
                 renotify: true
             });
         }).catch(() => {
-            sendBrowserNotification(title, body);
+            sendBrowserNotification(finalTitle, finalBody);
         });
     } else {
-        sendBrowserNotification(title, body);
+        sendBrowserNotification(finalTitle, finalBody);
     }
 }
 
@@ -1463,9 +1466,9 @@ function showRealtimeStickerToast(stickerIndex, memo) {
     const memoHtml = memo ? `<div class="notif-memo">💬 ${escapeHtml(memo)}</div>` : "";
 
     notifElem.innerHTML = `
-        <span class="notif-icon">🎉</span>
+        <span class="notif-icon">✨</span>
         <div class="notif-body">
-            <div class="notif-title">새로운 칭찬 스티커 ${displayIndex ? displayIndex + '번 ' : ''}도착!</div>
+            <div class="notif-title">새로운 스티커가 붙었습니다.</div>
             ${memoHtml}
         </div>
     `;
@@ -1502,9 +1505,10 @@ function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = fal
         // 3. 화면 토스트 알림 노출
         showRealtimeStickerToast(stickerIndex, memo);
 
-        // 4. 모바일 푸시 알림 (진동 + 모바일 상단 알림 바 + 데스크톱 알림)
-        const memoText = memo ? `"${memo}"` : "새 칭찬 스티커가 등록되었습니다!";
-        triggerMobilePushNotification("🎉 새로운 칭찬 스티커 도착!", memoText);
+        // 4. 모바일 백그라운드 푸시 알림 (진동 + 모바일 상단 알림 바)
+        const notifTitle = "새로운 스티커가 붙었습니다.";
+        const memoText = memo ? `"${memo}"` : "새로운 스티커가 붙었습니다.";
+        triggerMobilePushNotification(notifTitle, memoText);
 
         // 5. 스티커 칸 Glow 하이라이트
         highlightNewStickerSlot(stickerIndex);

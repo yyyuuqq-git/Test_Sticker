@@ -1456,20 +1456,16 @@ function escapeHtml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-// 스티커 부착 시 화면 팝업 토스트 노출
+// 스티커 부착 시 화면 팝업 토스트 노출 (메모 내용 숨김, 단일 문구 고정)
 let realtimeNotifTimeout = null;
 function showRealtimeStickerToast(stickerIndex, memo) {
     const notifElem = document.getElementById("realtime-notification");
     if (!notifElem) return;
 
-    const displayIndex = (stickerIndex !== undefined && stickerIndex !== null) ? (stickerIndex + 1) : "";
-    const memoHtml = memo ? `<div class="notif-memo">💬 ${escapeHtml(memo)}</div>` : "";
-
     notifElem.innerHTML = `
         <span class="notif-icon">✨</span>
         <div class="notif-body">
             <div class="notif-title">새로운 스티커가 붙었습니다.</div>
-            ${memoHtml}
         </div>
     `;
 
@@ -1507,8 +1503,8 @@ function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = fal
 
         // 4. 모바일 백그라운드 푸시 알림 (진동 + 모바일 상단 알림 바)
         const notifTitle = "새로운 스티커가 붙었습니다.";
-        const memoText = memo ? `"${memo}"` : "새로운 스티커가 붙었습니다.";
-        triggerMobilePushNotification(notifTitle, memoText);
+        const notifBody = "새로운 스티커가 붙었습니다.";
+        triggerMobilePushNotification(notifTitle, notifBody);
 
         // 5. 스티커 칸 Glow 하이라이트
         highlightNewStickerSlot(stickerIndex);

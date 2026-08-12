@@ -2,7 +2,7 @@
 // 서비스 워커 (Service Worker) - 모바일 백그라운드 푸시 알림
 // ==========================================
 
-const CACHE_NAME = 'praise-sticker-v2';
+const CACHE_NAME = 'praise-sticker-v3';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
@@ -12,19 +12,10 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
 });
 
-// 백그라운드 푸시 수신 이벤트 핸들러 (화면 꺼짐 / 브라우저 닫힘 상태 완벽 지원)
+// 백그라운드 푸시 수신 이벤트 핸들러 (스티커 메모 수신 비활성화, 고정 단일 문구만 출력)
 self.addEventListener('push', (event) => {
-    let title = '새로운 스티커가 붙었습니다.';
-    let body = '새로운 스티커가 붙었습니다.';
-    if (event.data) {
-        try {
-            const data = event.data.json();
-            title = data.title || '새로운 스티커가 붙었습니다.';
-            body = data.body || '새로운 스티커가 붙었습니다.';
-        } catch (e) {
-            body = event.data.text() || '새로운 스티커가 붙었습니다.';
-        }
-    }
+    const title = '새로운 스티커가 붙었습니다.';
+    const body = '새로운 스티커가 붙었습니다.';
 
     const options = {
         body: body,
@@ -47,7 +38,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SHOW_STICKER_NOTIFICATION') {
         const title = '새로운 스티커가 붙었습니다.';
-        const body = event.data.memo ? `"${event.data.memo}"` : '새로운 스티커가 붙었습니다.';
+        const body = '새로운 스티커가 붙었습니다.';
         const options = {
             body: body,
             icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',

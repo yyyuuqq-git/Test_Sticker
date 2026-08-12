@@ -1,45 +1,65 @@
 /* ==========================================
-   스티치 테마 칭찬나라 전역 CSS 디자인 시스템
+   고양이 테마 칭찬나라 전역 CSS 디자인 시스템
    ========================================== */
 
 /* 1. 디자인 토큰 및 변수 */
 :root {
-    --stitch-primary: #4A5568; /* slate blue-gray */
-    --stitch-primary-dark: #2D3748; /* charcoal */
-    --stitch-light-sky: #E2E8F0;
-    --stitch-pink: #F87171; /* soft pink */
-    --stitch-dark: #1A202C;
-    --stitch-bg-light: #FAF6F0; /* cozy cream */
+    --stitch-primary: #EC4899; /* lovely pink */
+    --stitch-primary-dark: #BE185D; /* deep pink */
+    --stitch-primary-light: #FFF1F2;
+    --stitch-bg-gradient-start: #FCE7F3;
+    --stitch-bg-gradient-end: #F472B6;
+    --stitch-glow: rgba(236, 72, 153, 0.25);
+    
+    --stitch-light-sky: #FCE7F3; /* soft pink pastel */
+    --stitch-pink: #F472B6; /* bright pink */
+    --stitch-dark: #831843; /* rich rose dark */
+    --stitch-bg-light: #FFF5F7; /* warm cozy pink cream */
     --stitch-card-bg: #FFFFFF;
     
     --accent-yellow: #F59E0B; /* warm gold */
-    --soft-pink: #FEF2F2;
-    --soft-blue: #EDF2F7;
+    --soft-pink: #FDF2F8;
+    --soft-blue: #FCE7F3;
     
-    --text-primary: #2D3748;
-    --text-muted: #718096;
-    --border-color: #CBD5E0;
+    --text-primary: #4C0519;
+    --text-muted: #9D4C6C;
+    --border-color: #FBCFE8;
     
     --font-app: 'Nunito', 'Jua', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* 2. 전역 스타일 초기화 */
-* {
+/* 2. 전역 스타일 초기화 & iOS 텍스트 선택 방지 */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent; /* 모바일 터치 하이라이트 제거 */
+    -webkit-user-select: none; /* iOS Safari 텍스트 선택 및 드래그 방지 */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none; /* 텍스트 드래그 선택 방지 */
+    -webkit-touch-callout: none; /* iOS 롱프레스 말풍선/콜아웃 방지 */
+}
+
+/* 편집자가 직접 타이핑/입력하는 필드는 정상 텍스트 선택 및 드래그 허용 */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: default !important;
 }
 
 body {
     font-family: var(--font-app);
-    background-color: #E2DCD5; /* cozy warm background */
+    background: linear-gradient(135deg, var(--stitch-bg-gradient-start, #FCE7F3) 0%, var(--stitch-bg-gradient-end, #F472B6) 100%);
     color: var(--text-primary);
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
     overflow-x: hidden;
+    transition: background 0.35s ease;
 }
 
 /* 3. 반응형 앱 컨테이너 설계 */
@@ -378,15 +398,28 @@ body {
 
 .slot-number {
     position: absolute;
-    bottom: 4px;
-    right: 6px;
-    font-size: 9px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
     font-weight: 800;
-    color: var(--text-muted);
+    line-height: 1;
+    color: var(--stitch-primary-dark);
+    opacity: 0.6;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
 }
 
 .grid-slot.active .slot-number {
+    top: auto;
+    left: auto;
+    bottom: 4px;
+    right: 6px;
+    transform: none;
+    font-size: 9px;
+    font-weight: 800;
     color: var(--text-muted);
+    opacity: 0.8;
 }
 
 /* 스티커 등장 팝 애니메이션 및 스티커 종이 질감 효과 */
@@ -864,19 +897,57 @@ input:disabled {
     color: var(--text-muted);
 }
 
-/* 보드 삭제 버튼 */
+/* 보드 액션 버튼 그룹 (수정 / 삭제) */
+.board-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 5;
+}
+
+.btn-edit-board,
 .btn-delete-board {
     background: transparent;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: background-color 0.2s, color 0.2s;
-    z-index: 5;
+    transition: background-color 0.2s, color 0.2s, transform 0.15s;
+}
+
+.btn-edit-board:hover {
+    background-color: rgba(74, 85, 104, 0.12);
+    color: var(--stitch-primary-dark);
+}
+
+.btn-edit-board:active,
+.btn-delete-board:active {
+    transform: scale(0.9);
+}
+
+/* 롱프레스 드래그 앤 드롭 재정렬 스타일 */
+.board-list.is-reordering {
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.board-list.is-reordering .board-item:not(.dragging) {
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.board-item.dragging {
+    opacity: 0.9;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    border-color: var(--stitch-pink);
+    background-color: var(--soft-pink);
+    z-index: 1000;
+    pointer-events: none;
+    transition: box-shadow 0.15s ease;
 }
 
 .btn-delete-board:hover {
@@ -1305,4 +1376,232 @@ input:disabled {
     50% { transform: scale(1.15) rotate(5deg); }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+
+/* ==========================================
+   RGB 색상 팔레트 모달 및 프리셋 스타일
+   ========================================== */
+.color-preview-box {
+    width: 100%;
+    height: 54px;
+    border-radius: 14px;
+    margin: 14px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.2s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.color-preview-text {
+    font-family: 'Nunito', monospace;
+    font-weight: 800;
+    font-size: 16px;
+    color: #FFFFFF;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    letter-spacing: 1px;
+}
+
+.color-preset-section {
+    margin-bottom: 16px;
+}
+
+.section-subtitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.color-preset-btn {
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.color-preset-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.color-preset-btn.active {
+    border-color: #FFFFFF;
+    outline: 2px solid var(--stitch-primary, #EC4899);
+}
+
+.rgb-controls-section {
+    background-color: var(--stitch-bg-light, #FFF5F7);
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color, #FBCFE8);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rgb-slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rgb-slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.rgb-val {
+    font-family: monospace;
+    font-weight: 700;
+}
+
+.rgb-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #E2E8F0;
+    outline: none;
+}
+
+.rgb-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.slider-red::-webkit-slider-thumb { background: #EF4444; }
+.slider-green::-webkit-slider-thumb { background: #10B981; }
+.slider-blue::-webkit-slider-thumb { background: #3B82F6; }
+
+.color-picker-input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color, #FBCFE8);
+}
+
+.color-input-field {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: none;
+}
+
+/* ==========================================
+ * 19. 실시간 스티커 부착 알림 스타일 & 애니메이션
+ * ========================================== */
+
+.realtime-notification-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: linear-gradient(135deg, #FF6B6B 0%, #EC4899 50%, #8B5CF6 100%);
+    color: white;
+    padding: 14px 22px;
+    border-radius: 30px;
+    box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4), 0 4px 10px rgba(0,0,0,0.15);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Jua', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    opacity: 0;
+    pointer-events: auto;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+.realtime-notification-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.realtime-notification-toast .notif-icon {
+    font-size: 24px;
+    animation: notifBounce 1.5s infinite;
+}
+
+.realtime-notification-toast .notif-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.realtime-notification-toast .notif-title {
+    font-weight: bold;
+    font-size: 15px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.realtime-notification-toast .notif-memo {
+    font-size: 12px;
+    opacity: 0.95;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 2px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@keyframes notifBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-4px) rotate(-8deg); }
+    75% { transform: translateY(-2px) rotate(8deg); }
+}
+
+/* 신규 추가된 스티커 펄스 Glow 애니메이션 */
+@keyframes newStickerGlow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.8);
+    }
+    40% {
+        transform: scale(1.18) rotate(4deg);
+        box-shadow: 0 0 30px 10px rgba(236, 72, 153, 0.9);
+    }
+    70% {
+        transform: scale(1.08) rotate(-2deg);
+        box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.7);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+    }
+}
+
+.sticker-cell.newly-added-pulse {
+    animation: newStickerGlow 1.4s ease-in-out 2;
+    z-index: 20 !important;
+    position: relative;
+}
+
 

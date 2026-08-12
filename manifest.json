@@ -1,0 +1,21 @@
+{
+  "name": "칭찬스티커 테스트 🧪",
+  "short_name": "스티커테스트",
+  "description": "편집자가 스티커를 붙이면 조회자에게 모바일 푸시 알림을 발송하는 실시간 칭찬판 테스트 프로젝트",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFF5F8",
+  "theme_color": "#EC4899",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

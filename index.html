@@ -217,41 +217,117 @@
     <!-- B. 칭찬판 설정 및 불러오기 모달 -->
     <div id="modal-settings" class="modal-overlay hidden">
         <div class="modal-content scrollable">
-            <h3 class="modal-title">스티치 칭찬판 설정</h3>
+            <h3 class="modal-title">⚙️ 설정 및 환경 구성</h3>
+
+            <!-- 탭 버튼 헤더 -->
+            <div class="settings-tabs" style="display: flex; gap: 8px; margin-top: 10px; margin-bottom: 16px; border-bottom: 2px solid #F3F4F6; padding-bottom: 8px;">
+                <button type="button" id="tab-btn-general" class="settings-tab-btn active" style="flex: 1; padding: 10px; border: none; background: var(--stitch-primary, #EC4899); color: white; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                    ⚙️ 보드/보안 설정
+                </button>
+                <button type="button" id="tab-btn-notif" class="settings-tab-btn" style="flex: 1; padding: 10px; border: none; background: #F3F4F6; color: var(--text-primary, #1F2937); border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+                    🔔 개인 알림 설정
+                </button>
+            </div>
             
-            <!-- 공유판 불러오기 -->
-            <div class="settings-section">
-                <h4 class="section-title">🔗 공유 스티커판 불러오기</h4>
-                <div class="input-row">
-                    <input type="text" id="input-switch-board" placeholder="불러올 코드 입력" style="text-transform: uppercase;">
-                    <button id="btn-switch-board" class="btn btn-primary btn-sm">이동</button>
+            <!-- [탭 1] 보드 및 보안 설정 -->
+            <div id="tab-content-general" class="settings-tab-content">
+                <!-- 공유판 불러오기 -->
+                <div class="settings-section">
+                    <h4 class="section-title">🔗 공유 스티커판 불러오기</h4>
+                    <div class="input-row">
+                        <input type="text" id="input-switch-board" placeholder="불러올 코드 입력" style="text-transform: uppercase;">
+                        <button id="btn-switch-board" class="btn btn-primary btn-sm">이동</button>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- 현재 칭찬판 수정 (편집 상태일 때만 활성화) -->
+                <div class="settings-section">
+                    <h4 class="section-title">⚙️ 칭찬판 보안 및 라벨 설정 <span class="badge-lock">(편집 권한 필요)</span></h4>
+                    <div class="form-group">
+                        <label for="edit-app-title">앱 상단 대제목 (메인 타이틀)</label>
+                        <input type="text" id="edit-app-title" class="editor-only-field" placeholder="예: 우주 칭찬나라, 채소가게, 야옹이 칭찬나라" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-pin">편집용 비밀번호 PIN</label>
+                        <input type="password" id="edit-pin" class="editor-only-field" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-reader-name">조회 모드 명칭 (여자친구 모드)</label>
+                        <input type="text" id="edit-reader-name" class="editor-only-field" placeholder="기본값: 여자친구 모드 (조회 전용)" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-editor-name">편집 모드 명칭 (남자친구 모드)</label>
+                        <input type="text" id="edit-editor-name" class="editor-only-field" placeholder="기본값: 남자친구 모드 (부착 가능)" disabled>
+                    </div>
                 </div>
             </div>
 
-            <hr class="divider">
+            <!-- [탭 2] 개인 알림 설정 -->
+            <div id="tab-content-notif" class="settings-tab-content hidden">
+                <div class="settings-section">
+                    <h4 class="section-title">📱 개인 알림 수신 및 환경 설정</h4>
+                    <p style="font-size: 12px; color: #6B7280; margin-bottom: 14px; line-height: 1.4;">
+                        스티커 부착 시 내 스마트폰으로 수신되는 알림, 효과음, 진동을 맞춤 설정합니다.
+                    </p>
 
-            <!-- 현재 칭찬판 수정 (편집 상태일 때만 활성화) -->
-            <div class="settings-section">
-                <h4 class="section-title">⚙️ 칭찬판 보안 및 라벨 설정 <span class="badge-lock">(편집 권한 필요)</span></h4>
-                <div class="form-group">
-                    <label for="edit-app-title">앱 상단 대제목 (메인 타이틀)</label>
-                    <input type="text" id="edit-app-title" class="editor-only-field" placeholder="예: 우주 칭찬나라, 채소가게, 야옹이 칭찬나라" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="edit-pin">편집용 비밀번호 PIN</label>
-                    <input type="password" id="edit-pin" class="editor-only-field" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="edit-reader-name">조회 모드 명칭 (여자친구 모드)</label>
-                    <input type="text" id="edit-reader-name" class="editor-only-field" placeholder="기본값: 여자친구 모드 (조회 전용)" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="edit-editor-name">편집 모드 명칭 (남자친구 모드)</label>
-                    <input type="text" id="edit-editor-name" class="editor-only-field" placeholder="기본값: 남자친구 모드 (부착 가능)" disabled>
+                    <!-- 1. 푸시 알림 전체 수신 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #FFF5F8; border-radius: 12px; margin-bottom: 10px; border: 1px solid #FBCFE8;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px; color: var(--text-primary);">📱 모바일 푸시 알림 수신</div>
+                            <div style="font-size: 11px; color: #6B7280;">스마트폰 상단 알림 바 및 백그라운드 푸시</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-setting-push" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- 2. 알림 효과음 소리 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #EFF6FF; border-radius: 12px; margin-bottom: 10px; border: 1px solid #BFDBFE;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px; color: var(--text-primary);">🔔 알림 효과음 소리</div>
+                            <div style="font-size: 11px; color: #6B7280;">스티커 부착 시 맑은 챠임 효과음 소리</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-setting-sound" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- 3. 모바일 진동 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #F0FDF4; border-radius: 12px; margin-bottom: 10px; border: 1px solid #BBF7D0;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px; color: var(--text-primary);">📳 스마트폰 진동</div>
+                            <div style="font-size: 11px; color: #6B7280;">스티커 부착 시 손맛 진동 피드백</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-setting-vibrate" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- 4. 화면 토스트 알림 팝업 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #FEF3C7; border-radius: 12px; margin-bottom: 14px; border: 1px solid #FDE68A;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px; color: var(--text-primary);">✨ 화면 상단 팝업 토스트</div>
+                            <div style="font-size: 11px; color: #6B7280;">앱 화면 내 실시간 팝업 알림 카드</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-setting-toast" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- 알림 차단 해제 가이드 안내 버튼 -->
+                    <button id="btn-open-notif-guide" class="btn btn-secondary btn-sm" style="width: 100%;">
+                        ❓ 알림이 오지 않나요? (차단 해제 가이드 보기)
+                    </button>
                 </div>
             </div>
 
-            <div class="modal-actions">
+            <div class="modal-actions" style="margin-top: 18px;">
                 <button id="btn-settings-close" class="btn btn-secondary">닫기</button>
                 <button id="btn-settings-save" class="btn btn-primary hidden">저장</button>
             </div>

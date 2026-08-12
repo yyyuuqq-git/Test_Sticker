@@ -1292,6 +1292,7 @@ if (stickerBroadcastChannel) {
 // Web Audio API 오디오 챠임 효과음
 let audioContextInstance = null;
 function playNotificationSound() {
+    if (localStorage.getItem("notif_setting_sound") === "false") return;
     try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
@@ -1342,19 +1343,26 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// 모바일 푸시 알림 트리거 (진동 + 시스템 상단 알림 바 + 데스크톱 알림)
+// 모바일 푸시 알림 트리거 (개인 알림 설정 연동)
 function triggerMobilePushNotification(title, body) {
+    const pushOn = localStorage.getItem("notif_setting_push") !== "false";
+    const vibrateOn = localStorage.getItem("notif_setting_vibrate") !== "false";
+
+    if (!pushOn && !vibrateOn) return;
+
     const finalTitle = "새로운 스티커가 붙었습니다.";
     const finalBody = body || "새로운 스티커가 붙었습니다.";
 
-    // 1. 모바일 진동 효과 (Android/크롬 지원)
-    if ('vibrate' in navigator) {
+    // 1. 모바일 진동 효과 (사용자 설정이 켜져 있는 경우에만 발동)
+    if (vibrateOn && 'vibrate' in navigator) {
         try {
             navigator.vibrate([200, 100, 200, 100, 200]);
         } catch (e) {
             console.warn("진동 에러:", e);
         }
     }
+
+    if (!pushOn) return;
 
     // 고유 알림 태그로 스마트폰 상단 알림 덮어쓰기 방지 (매번 알림 바 팝업 강제)
     const notifTag = 'praise-sticker-notif-' + Date.now();
@@ -1366,7 +1374,7 @@ function triggerMobilePushNotification(title, body) {
                 body: finalBody,
                 icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
                 badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
-                vibrate: [200, 100, 200, 100, 200],
+                vibrate: vibrateOn ? [200, 100, 200, 100, 200] : [],
                 tag: notifTag,
                 renotify: true
             });
@@ -1462,6 +1470,7 @@ function escapeHtml(str) {
 // 스티커 부착 시 화면 팝업 토스트 노출 (메모 내용 숨김, 단일 문구 고정)
 let realtimeNotifTimeout = null;
 function showRealtimeStickerToast(stickerIndex, memo) {
+    if (localStorage.getItem("notif_setting_toast") === "false") return;
     const notifElem = document.getElementById("realtime-notification");
     if (!notifElem) return;
 
@@ -2679,4 +2688,82 @@ function startAutoSync() {
     });
 
     startAutoSync();
+
+    // ==========================================
+    // 개인 알림 설정 탭 및 토글 제어 이벤트 핸들러
+    // ==========================================
+    const tabBtnGeneral = document.getElementById("tab-btn-general");
+    const tabBtnNotif = document.getElementById("tab-btn-notif");
+    const tabContentGeneral = document.getElementById("tab-content-general");
+    const tabContentNotif = document.getElementById("tab-content-notif");
+
+    const toggleSettingPush = document.getElementById("toggle-setting-push");
+    const toggleSettingSound = document.getElementById("toggle-setting-sound");
+    const toggleSettingVibrate = document.getElementById("toggle-setting-vibrate");
+    const toggleSettingToast = document.getElementById("toggle-setting-toast");
+    const btnOpenNotifGuide = document.getElementById("btn-open-notif-guide");
+
+    function initNotificationSettingsUI() {
+        if (toggleSettingPush) toggleSettingPush.checked = localStorage.getItem("notif_setting_push") !== "false";
+        if (toggleSettingSound) toggleSettingSound.checked = localStorage.getItem("notif_setting_sound") !== "false";
+        if (toggleSettingVibrate) toggleSettingVibrate.checked = localStorage.getItem("notif_setting_vibrate") !== "false";
+        if (toggleSettingToast) toggleSettingToast.checked = localStorage.getItem("notif_setting_toast") !== "false";
+    }
+
+    if (tabBtnGeneral && tabBtnNotif) {
+        tabBtnGeneral.addEventListener("click", () => {
+            tabBtnGeneral.classList.add("active");
+            tabBtnNotif.classList.remove("active");
+            if (tabContentGeneral) tabContentGeneral.classList.remove("hidden");
+            if (tabContentNotif) tabContentNotif.classList.add("hidden");
+        });
+
+        tabBtnNotif.addEventListener("click", () => {
+            tabBtnNotif.classList.add("active");
+            tabBtnGeneral.classList.remove("active");
+            if (tabContentNotif) tabContentNotif.classList.remove("hidden");
+            if (tabContentGeneral) tabContentGeneral.classList.add("hidden");
+        });
+    }
+
+    if (toggleSettingPush) {
+        toggleSettingPush.addEventListener("change", function() {
+            localStorage.setItem("notif_setting_push", this.checked ? "true" : "false");
+            showToast(this.checked ? "📱 모바일 푸시 알림이 켜졌습니다." : "🔕 모바일 푸시 알림이 꺼졌습니다.");
+            if (this.checked) requestNotificationPermission();
+        });
+    }
+
+    if (toggleSettingSound) {
+        toggleSettingSound.addEventListener("change", function() {
+            localStorage.setItem("notif_setting_sound", this.checked ? "true" : "false");
+            showToast(this.checked ? "🔔 알림 효과음이 켜졌습니다." : "🔇 알림 효과음이 꺼졌습니다.");
+            if (this.checked) playNotificationSound();
+        });
+    }
+
+    if (toggleSettingVibrate) {
+        toggleSettingVibrate.addEventListener("change", function() {
+            localStorage.setItem("notif_setting_vibrate", this.checked ? "true" : "false");
+            showToast(this.checked ? "📳 모바일 진동이 켜졌습니다." : "📴 모바일 진동이 꺼졌습니다.");
+            if (this.checked && 'vibrate' in navigator) navigator.vibrate([150, 100, 150]);
+        });
+    }
+
+    if (toggleSettingToast) {
+        toggleSettingToast.addEventListener("change", function() {
+            localStorage.setItem("notif_setting_toast", this.checked ? "true" : "false");
+            showToast(this.checked ? "✨ 화면 팝업 토스트가 켜졌습니다." : "🙈 화면 팝업 토스트가 꺼졌습니다.");
+        });
+    }
+
+    if (btnOpenNotifGuide) {
+        btnOpenNotifGuide.addEventListener("click", () => {
+            if (modalSettings) modalSettings.classList.add("hidden");
+            if (modalNotifHelp) modalNotifHelp.classList.remove("hidden");
+        });
+    }
+
+    // 초기화 시 알림 설정 토글 상태 반영
+    initNotificationSettingsUI();
 });

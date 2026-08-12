@@ -297,25 +297,13 @@
                     </div>
 
                     <!-- 3. 모바일 진동 -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #F0FDF4; border-radius: 12px; margin-bottom: 10px; border: 1px solid #BBF7D0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #F0FDF4; border-radius: 12px; margin-bottom: 14px; border: 1px solid #BBF7D0;">
                         <div>
                             <div style="font-weight: bold; font-size: 14px; color: var(--text-primary);">📳 스마트폰 진동</div>
                             <div style="font-size: 11px; color: #6B7280;">스티커 부착 시 손맛 진동 피드백</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-setting-vibrate" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- 4. 화면 토스트 알림 팝업 -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #FEF3C7; border-radius: 12px; margin-bottom: 14px; border: 1px solid #FDE68A;">
-                        <div>
-                            <div style="font-weight: bold; font-size: 14px; color: var(--text-primary);">✨ 화면 상단 팝업 토스트</div>
-                            <div style="font-size: 11px; color: #6B7280;">앱 화면 내 실시간 팝업 알림 카드</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="toggle-setting-toast" checked>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
@@ -566,9 +554,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 실시간 스티커 알림 팝업 카운터 -->
-    <div id="realtime-notification" class="realtime-notification-toast"></div>
 
     <!-- 커스텀 JS (모바일 기기 브라우저 캐시 방지) -->
     <script src="app.js?v=3.3.0-mobile-sync"></script>

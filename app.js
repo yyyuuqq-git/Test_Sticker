@@ -1467,27 +1467,7 @@ function escapeHtml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-// 스티커 부착 시 화면 팝업 토스트 노출 (메모 내용 숨김, 단일 문구 고정)
-let realtimeNotifTimeout = null;
-function showRealtimeStickerToast(stickerIndex, memo) {
-    if (localStorage.getItem("notif_setting_toast") === "false") return;
-    const notifElem = document.getElementById("realtime-notification");
-    if (!notifElem) return;
 
-    notifElem.innerHTML = `
-        <span class="notif-icon">✨</span>
-        <div class="notif-body">
-            <div class="notif-title">새로운 스티커가 붙었습니다.</div>
-        </div>
-    `;
-
-    notifElem.classList.add("show");
-
-    if (realtimeNotifTimeout) clearTimeout(realtimeNotifTimeout);
-    realtimeNotifTimeout = setTimeout(() => {
-        notifElem.classList.remove("show");
-    }, 4500);
-}
 
 // 신규 스티커 슬롯 Highlight Glow 애니메이션
 function highlightNewStickerSlot(stickerIndex) {
@@ -1507,9 +1487,8 @@ function highlightNewStickerSlot(stickerIndex) {
 function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = false, targetBoardId = null) {
     const isCurrentBoard = !targetBoardId || targetBoardId === currentBoardId;
 
-    // 1. 편집자 스티커 부착 순간 즉시 알림 동시 발동 (푸시 알림 + 소리 + 진동 + 토스트)
+    // 1. 편집자 스티커 부착 순간 즉시 알림 동시 발동 (푸시 알림 + 소리 + 진동)
     playNotificationSound();
-    showRealtimeStickerToast(stickerIndex, memo);
     triggerMobilePushNotification("새로운 스티커가 붙었습니다.", "새로운 스티커가 붙었습니다.");
 
     // 2. 현재 열려 있는 스티커판이면 화면 UI 즉시 갱신 및 슬롯 반짝임

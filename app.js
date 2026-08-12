@@ -1491,30 +1491,27 @@ function highlightNewStickerSlot(stickerIndex) {
     }
 }
 
-// 실시간 스티커 부착 처리 통합 핸들러 (다른 스티커판을 열어둔 상태에서도 푸시 알림 100% 수신)
+// 스티커 부착 실시간 0초 감지 핸들러 (편집자 부착 순간 화면 업데이트 + 푸시 알림 동시 실행)
 function handleStickerAddedNotification(stickerIndex, memo, senderIsEditor = false, targetBoardId = null) {
     const isCurrentBoard = !targetBoardId || targetBoardId === currentBoardId;
 
+    // 1. 편집자 스티커 부착 순간 즉시 알림 동시 발동 (푸시 알림 + 소리 + 진동 + 토스트)
+    playNotificationSound();
+    showRealtimeStickerToast(stickerIndex, memo);
+    triggerMobilePushNotification("새로운 스티커가 붙었습니다.", "새로운 스티커가 붙었습니다.");
+
+    // 2. 현재 열려 있는 스티커판이면 화면 UI 즉시 갱신 및 슬롯 반짝임
     if (isCurrentBoard) {
-        // 1. 현재 열려 있는 스티커판이면 UI 리프레시 + 알림 + 스티커 슬롯 하이라이트
         refreshApp().then(() => {
-            playNotificationSound();
-            showRealtimeStickerToast(stickerIndex, memo);
-            triggerMobilePushNotification("새로운 스티커가 붙었습니다.", "새로운 스티커가 붙었습니다.");
             highlightNewStickerSlot(stickerIndex);
         });
-    } else {
-        // 2. 다른 스티커판에 스티커가 붙은 경우에도 알림 소리 + 모바일 진동 + 모바일 푸시 알림 즉시 발송
-        playNotificationSound();
-        showRealtimeStickerToast(stickerIndex, memo);
-        triggerMobilePushNotification("새로운 스티커가 붙었습니다.", "새로운 스티커가 붙었습니다.");
     }
 }
 
 let realtimeChannelsMap = new Map();
 let lastProcessedStickerKey = null;
 
-// 보유한 모든 스티커판 다중 실시간 연동 (다른 스티커판 교차 알림 수신)
+// 보유한 모든 스티커판 100% 이벤트 기반 실시간 수신 (편집자 부착 순간 0초 감지)
 function setupRealtimeSubscription(boardId) {
     if (!boardId) return;
 
@@ -1523,10 +1520,7 @@ function setupRealtimeSubscription(boardId) {
     const targetBoardIds = new Set(registered.map(b => b.id));
     targetBoardIds.add(boardId);
 
-    if (!supabaseClient || isLocalMode) {
-        setupSmartPollingSync(targetBoardIds);
-        return;
-    }
+    if (!supabaseClient || isLocalMode) return;
 
     try {
         targetBoardIds.forEach(bId => {
@@ -1575,50 +1569,9 @@ function setupRealtimeSubscription(boardId) {
 
             realtimeChannelsMap.set(bId, channel);
         });
-
-        // 3중 다중 스티커판 스마트 폴링 동기화 연결
-        setupSmartPollingSync(targetBoardIds);
     } catch (e) {
         console.warn("Realtime 구독 설정 에러:", e);
     }
-}
-
-let pollingSyncInterval = null;
-let boardStickerCountsMap = new Map();
-
-// 보유한 모든 스티커판 대상 4초 간격 교차 알림 폴링 동기화기
-function setupSmartPollingSync(targetBoardIds) {
-    if (pollingSyncInterval) {
-        clearInterval(pollingSyncInterval);
-        pollingSyncInterval = null;
-    }
-    const idsArray = Array.from(targetBoardIds || []);
-    if (idsArray.length === 0) return;
-
-    pollingSyncInterval = setInterval(async () => {
-        try {
-            for (const bId of idsArray) {
-                const stickers = await apiGetStickers(bId);
-                if (stickers && Array.isArray(stickers)) {
-                    const lastCount = boardStickerCountsMap.get(bId);
-                    if (lastCount !== undefined && lastCount >= 0 && stickers.length > lastCount) {
-                        const sorted = stickers.slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-                        const latest = sorted[0];
-                        if (latest && latest.sticker_index !== undefined) {
-                            const key = `${bId}_${latest.sticker_index}_POLL`;
-                            if (lastProcessedStickerKey !== key) {
-                                lastProcessedStickerKey = key;
-                                handleStickerAddedNotification(latest.sticker_index, latest.memo, false, bId);
-                            }
-                        }
-                    }
-                    boardStickerCountsMap.set(bId, stickers.length);
-                }
-            }
-        } catch (e) {
-            console.warn("다중 보드 스마트 폴링 동기화 에러:", e);
-        }
-    }, 4000);
 }
 
 // 현재 화면 리프레시

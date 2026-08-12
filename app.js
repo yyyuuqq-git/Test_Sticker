@@ -1356,6 +1356,9 @@ function triggerMobilePushNotification(title, body) {
         }
     }
 
+    // 고유 알림 태그로 스마트폰 상단 알림 덮어쓰기 방지 (매번 알림 바 팝업 강제)
+    const notifTag = 'praise-sticker-notif-' + Date.now();
+
     // 2. 서비스 워커 푸시 알림 시도 (모바일 백그라운드 상단 알림 바)
     if ('serviceWorker' in navigator && Notification.permission === "granted") {
         navigator.serviceWorker.ready.then(registration => {
@@ -1364,7 +1367,7 @@ function triggerMobilePushNotification(title, body) {
                 icon: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
                 badge: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
                 vibrate: [200, 100, 200, 100, 200],
-                tag: 'praise-sticker-notification',
+                tag: notifTag,
                 renotify: true
             });
         }).catch(() => {
@@ -1553,11 +1556,13 @@ function setupRealtimeSubscription(boardId) {
                                 applyThemeColor(match[1], false);
                             }
                         } else {
-                            if (payload.eventType === 'INSERT' && newRecord && newRecord.sticker_index !== undefined) {
+                            if (newRecord && newRecord.sticker_index !== undefined && newRecord.sticker_index !== null) {
                                 const key = `${newRecord.board_id}_${newRecord.sticker_index}_DB`;
                                 if (lastProcessedStickerKey !== key) {
                                     lastProcessedStickerKey = key;
                                     handleStickerAddedNotification(newRecord.sticker_index, newRecord.memo, false, newRecord.board_id);
+                                } else if (bId === currentBoardId) {
+                                    refreshApp();
                                 }
                             } else if (bId === currentBoardId) {
                                 refreshApp();

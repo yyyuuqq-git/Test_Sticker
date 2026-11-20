@@ -1,4 +1,4 @@
-// ==========================================
+﻿// ==========================================
 // 스티치 칭찬나라 JavaScript 핵심 기능 제어
 // ==========================================
 
@@ -25,15 +25,17 @@ if (!isLocalMode) {
     console.log("Supabase 설정이 비어있어 '로컬 모드(기기 브라우저 저장)'로 구동됩니다.");
 }
 
-// 테스트 프로젝트 전용 보드 판별 (Rule 1 & Rule 2 준수: 라이브 실사용자 보드 제외)
+// 테스트 프로젝트 전용 보드 판별 (Rule 1 & Rule 2 준수: 라이브 실사용자 보드 100% 제외 - 프라이버시 보호)
 function isTestProjectBoard(b) {
     if (!b) return false;
     const idStr = String(typeof b === 'string' ? b : (b.id || "")).toUpperCase();
     const titleStr = String(typeof b === 'object' && b.title ? b.title : "").toUpperCase();
-    // 실제 생산용 라이브 보드 (CAT-BOARD, TEST-COSMIC-BOARD, CHAEDO_ 등) 배제
-    if (idStr === "CAT-BOARD" || idStr === "CAT" || idStr === "KITTY") return false;
-    if (idStr.startsWith("CHAEDO") || idStr.includes("VEGE") || idStr.includes("VEGETABLE")) return false;
-    if (idStr === "TEST-COSMIC-BOARD" || idStr.startsWith("BON_WOOK") || idStr.startsWith("MOON") || idStr.includes("COSMIC") || idStr.includes("LUNAR")) return false;
+    
+    // 실제 생산용 라이브 보드 배제 (달, 수산시장, 채소, 고양이)
+    if (idStr === "CAT-BOARD" || idStr === "CAT" || idStr === "KITTY" || titleStr.includes("고양이") || titleStr.includes("야옹")) return false;
+    if (idStr.startsWith("FISH") || idStr.includes("FISH") || titleStr.includes("수산시장") || titleStr.includes("물고기") || titleStr.includes("생선")) return false;
+    if (idStr.startsWith("CHAEDO") || idStr.includes("VEGE") || idStr.includes("VEGETABLE") || titleStr.includes("채소") || titleStr.includes("야채") || titleStr.includes("당근") || titleStr.includes("채건")) return false;
+    if (idStr === "TEST-COSMIC-BOARD" || idStr.startsWith("BON_WOOK") || idStr === "0427" || idStr === "1" || idStr.startsWith("MOON") || idStr.includes("COSMIC") || idStr.includes("LUNAR") || titleStr.includes("달") || titleStr.includes("우주") || titleStr.includes("별") || titleStr.includes("업보") || titleStr.includes("스티치") || titleStr.includes("욱이")) return false;
     return true;
 }
 const isCatBoard = isTestProjectBoard;
@@ -2294,9 +2296,18 @@ function updatePaletteUI(hex) {
     if (rangeR) rangeR.value = r;
     if (rangeG) rangeG.value = g;
     if (rangeB) rangeB.value = b;
-    if (valR) valR.textContent = r;
-    if (valG) valG.textContent = g;
-    if (valB) valB.textContent = b;
+    if (valR) {
+        if ('value' in valR) valR.value = r;
+        valR.textContent = r;
+    }
+    if (valG) {
+        if ('value' in valG) valG.value = g;
+        valG.textContent = g;
+    }
+    if (valB) {
+        if ('value' in valB) valB.value = b;
+        valB.textContent = b;
+    }
     if (inputCustomColor) inputCustomColor.value = hex;
 
     if (colorPreviewBox) colorPreviewBox.style.backgroundColor = hex;
@@ -2392,9 +2403,66 @@ function onRgbSliderChange() {
     updatePaletteUI(hex);
 }
 
+function onRgbNumInputChange(isBlur = false) {
+    let r = parseInt(valR ? valR.value : "0", 10);
+    let g = parseInt(valG ? valG.value : "0", 10);
+    let b = parseInt(valB ? valB.value : "0", 10);
+
+    if (isNaN(r)) r = 0;
+    if (isNaN(g)) g = 0;
+    if (isNaN(b)) b = 0;
+
+    if (r > 255) r = 255;
+    if (g > 255) g = 255;
+    if (b > 255) b = 255;
+    if (r < 0) r = 0;
+    if (g < 0) g = 0;
+    if (b < 0) b = 0;
+
+    if (isBlur) {
+        if (valR) valR.value = r;
+        if (valG) valG.value = g;
+        if (valB) valB.value = b;
+    }
+
+    if (rangeR) rangeR.value = r;
+    if (rangeG) rangeG.value = g;
+    if (rangeB) rangeB.value = b;
+
+    const hex = rgbToHex(r, g, b);
+    if (inputCustomColor) inputCustomColor.value = hex;
+    if (colorPreviewBox) colorPreviewBox.style.backgroundColor = hex;
+    if (colorPreviewText) colorPreviewText.textContent = hex;
+
+    const presetBtns = document.querySelectorAll(".color-preset-btn");
+    presetBtns.forEach(btn => {
+        if (btn.getAttribute("data-color").toUpperCase() === hex) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+}
+
 if (rangeR) rangeR.addEventListener("input", onRgbSliderChange);
 if (rangeG) rangeG.addEventListener("input", onRgbSliderChange);
 if (rangeB) rangeB.addEventListener("input", onRgbSliderChange);
+
+if (valR) {
+    valR.addEventListener("input", () => onRgbNumInputChange(false));
+    valR.addEventListener("change", () => onRgbNumInputChange(true));
+    valR.addEventListener("blur", () => onRgbNumInputChange(true));
+}
+if (valG) {
+    valG.addEventListener("input", () => onRgbNumInputChange(false));
+    valG.addEventListener("change", () => onRgbNumInputChange(true));
+    valG.addEventListener("blur", () => onRgbNumInputChange(true));
+}
+if (valB) {
+    valB.addEventListener("input", () => onRgbNumInputChange(false));
+    valB.addEventListener("change", () => onRgbNumInputChange(true));
+    valB.addEventListener("blur", () => onRgbNumInputChange(true));
+}
 
 if (inputCustomColor) {
     inputCustomColor.addEventListener("input", (e) => {
